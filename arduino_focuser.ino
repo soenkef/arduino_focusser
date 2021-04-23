@@ -34,7 +34,7 @@
 Adafruit_SSD1306 display(SCREEN_WIDTH, SCREEN_HEIGHT, &Wire, OLED_RESET);
 
 
-
+// DHT
 #define DHTPIN 7 //Der Sensor wird an PIN 2 angeschlossen    
 #define DHTTYPE DHT11    // Es handelt sich um den DHT11 Sensor
 DHT dht(DHTPIN, DHTTYPE); //Der Sensor wird ab jetzt mit „dth“ angesprochen
@@ -46,13 +46,12 @@ DHT dht(DHTPIN, DHTTYPE); //Der Sensor wird ab jetzt mit „dth“ angesprochen
 #define   POTI_PIN          A0
 int sensorReading = 0;
 int motorSpeed = 0;
+float voltage;
 
 // temperature
 int tempSensorValue = 0;
-int temperature = 0;
+float temperature, humedity;
 int tempIntervall = 500;
-
-
 
 const int stepsPerRevolution = 200;  // change this to fit the number of steps per revolution
 // for your motor
@@ -76,16 +75,11 @@ void setup() {
 
 void loop() {
 
-  float humedity = dht.readHumidity(); //die Luftfeuchtigkeit auslesen und unter „Luftfeutchtigkeit“ speichern
-  float temperature = dht.readTemperature();//die Temperatur auslesen und unter „Temperatur“ speichern
+  humedity = dht.readHumidity(); //die Luftfeuchtigkeit auslesen und unter „Luftfeutchtigkeit“ speichern
+  temperature = dht.readTemperature();//die Temperatur auslesen und unter „Temperatur“ speichern
   delay(tempIntervall);
   Serial.print("Temp: ");
-  //Serial.println(tempSensorValue);
   Serial.println(temperature);
-  //Serial.print(" - ");
-  //temperature = map(tempSensorValue, 0, 410, -50, 150);
-  //Serial.print(" mapped temperature: ");
-  //Serial.println(temperature);
   
   // read the sensor value of poti:
   sensorReading = analogRead(POTI_PIN);
@@ -95,9 +89,8 @@ void loop() {
  
   // map it to a range from 0 to 100:
   motorSpeed = map(sensorReading, 0, 1023, 0, 100);
-  //Serial.print("stepper: ");
   Serial.println(motorSpeed);
-  float voltage = sensorReading * (5.0 / 1023.0);
+  voltage = sensorReading * (5.0 / 1023.0);
   // print out the value you read:
   Serial.print("Volt: ");
   Serial.println(voltage);
