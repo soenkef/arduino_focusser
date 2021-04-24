@@ -96,8 +96,13 @@ void loop() {
  
   // map it to a range from 0 to 100:
   motorSpeed = map(sensorReading, 0, 1023, 0, 1000);
-  // reduce steps
   result = motorSpeed / 10;
+  if (motorSpeed < 50) {
+        motorSpeed = 0;
+        result = 0;
+      }
+  // reduce steps
+  
   Serial.print("Steps: ");
   Serial.println(motorSpeed);
   //voltage = sensorReading * (5.0 / 1023.0);
