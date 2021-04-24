@@ -99,6 +99,25 @@ void loop() {
   Serial.println("------------------------------------");
   delay(tempIntervall);
   
+  display.clearDisplay();
+  display.setTextSize(1); // Draw 2X-scale text
+  display.setTextColor(WHITE);
+  display.setCursor(0, 0);;
+  display.print(F("Temp:    "));
+  display.print(temperature);
+  display.print(F(" "));
+  display.print(char(247)); // Grad-Zeichen
+  display.println(F("C"));
+  display.setCursor(0, 10);
+  display.print(F("Feuchte: "));
+  display.print(humedity);
+  display.println(F(" %"));
+  display.setCursor(0, 20);
+  display.print(F("Speed: "));
+  display.print(motorSpeed);
+  display.println(F(" %"));
+  display.display();  
+  
   // set the motor speed:
   if (motorSpeed > 0) {
     myStepper.setSpeed(motorSpeed);
