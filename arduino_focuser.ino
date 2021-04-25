@@ -49,10 +49,10 @@ int motorSpeed = 0;
 float voltage;
 int result = 0;
 int limitTop = 970;
-int limitBottom = 74;
 const byte e = 5; // Nur Änderungen größer e werden bearbeitet.
 int last;
 int lastval_0;  // für analogRead(A0)
+int mySensVals[14] = {1, 3, 5, 7, 9, 10, 15, 20, 25, 30, 40, 55, 75, 95};
 
 #define BUTTON_UP 8
 #define BUTTON_DOWN 9
@@ -136,6 +136,8 @@ void loop() {
   }
   if (buttonExtraState == HIGH) {
     Serial.println("ButtonExtra");
+    display.clearDisplay();
+    display.display();
   }
   
   // use display output
@@ -153,26 +155,58 @@ void calculateSteps(int potiValue) {
    //}
   // todo: do calculation an stepper way in extra function by interrupt
   result = potiValue;
+  if (potiValue == 0) {
+    motorSpeed = 1;
+    result = 1;
+  }
   if (potiValue > limitTop) {
     motorSpeed = 1024;
     result = 1024;
   }
-  if (potiValue < 100) {
-    motorSpeed = 100;
-    result = 10;
+  if (potiValue < 200) {
+    result = mySensVals[13];
   }
-  if (potiValue < 90) {
-    motorSpeed = 90;
-    result = 9;
+  if (potiValue < 190) {
+    result = mySensVals[12];
+  }
+  if (potiValue < 180) {
+    result = mySensVals[11];
+  }
+  if (potiValue < 170) {
+    result = mySensVals[10];
+  }
+  if (potiValue < 150) {
+    result = mySensVals[9];
+  }
+  if (potiValue < 140) {
+    result = mySensVals[8];
+  }  
+  if (potiValue < 130) {
+    result = mySensVals[6];
+  }
+  if (potiValue < 120) {
+    result = mySensVals[5];
+  }
+  if (potiValue < 100) {
+    result = mySensVals[3];
   }
   if (potiValue < 80) {
-    motorSpeed = 80;
-    result = 8;
+    result = mySensVals[2];
   }
-  if (potiValue < limitBottom) {
-    motorSpeed = 10;
+  if (potiValue < 60) {
+    result = mySensVals[1];
+  }
+  if (potiValue < 40) {
+    result = mySensVals[0];
+  }
+  if (potiValue < 30) {
     result = 1;
   }
+  //if (potiValue < limitBottom) {
+  //  motorSpeed = 10;
+  //  result = 1;
+  //}
+  
   
 }
 
@@ -218,6 +252,7 @@ void makeSteps(int direction) {
     result = -1 * result;
     Serial.print("negativer Wert!");
   }
+  
   Serial.print("SetSpeed: ");
   Serial.println(result);
   myStepper.setSpeed(5);
