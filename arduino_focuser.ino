@@ -48,29 +48,49 @@ int sensorReading = 0;
 int motorSpeed = 0;
 float voltage;
 int result = 0;
+int limitTop = 970;
+int limitBottom = 74;
+const byte e = 5; // Nur Änderungen größer e werden bearbeitet.
+int last;
+int lastval_0;  // für analogRead(A0)
 
 #define BUTTON_UP 8
+#define BUTTON_DOWN 9
+#define BUTTON_EXTRA 10
 int buttonUpState = 0;
+int buttonDownState = 0;
+int buttonExtraState = 0;
 
 // temperature
 int tempSensorValue = 0;
 float temperature, humedity;
 float temperatureNew, humedityNew;
-int tempIntervall = 500;
+int tempIntervall = 300;
 
-const int stepsPerRevolution = 200;  // change this to fit the number of steps per revolution
 // for your motor
+int stepsPerRevolution = 2048;  // change this to fit the number of steps per revolution
 
 // initialize the stepper library on pins 8 through 11:
 Stepper myStepper(stepsPerRevolution, 3, 4, 5, 6);
 
 int stepCount = 0;  // number of steps the motor has taken
 
+int filter(int in, int& last) {
+   if ( (in < (last - e) || (last + e) < in ) ) {
+       last = in;
+   }
+   return last;
+}
+
 void setup() {
   // nothing to do inside the setup
   dht.begin(); //DHT11 Sensor starten
   pinMode(BUTTON_UP, INPUT);
-  //attachInterrupt (digitalPinToInterrupt (BUTTON_UP), switchPressed, CHANGE);  // attach interrupt handler
+  pinMode(BUTTON_DOWN, INPUT);
+  pinMode(BUTTON_EXTRA, INPUT);
+  //attachInterrupt (digitalPinToInterrupt (BUTTON_UP), switchPressed, HIGH);  // attach interrupt handler
+  //attachInterrupt (digitalPinToInterrupt (BUTTON_DOWN), switchPressed, HIGH);  // attach interrupt handler
+  //attachInterrupt (digitalPinToInterrupt (BUTTON_EXTRA), switchPressed, CHANGE);  // attach interrupt handler  
   Serial.begin(9600);
   // SSD1306_SWITCHCAPVCC = generate display voltage from 3.3V internally
   if(!display.begin(SSD1306_SWITCHCAPVCC, 0x3C)) { // Address 0x3C for 128x32
@@ -85,74 +105,125 @@ void loop() {
   humedity = dht.readHumidity(); //die Luftfeuchtigkeit auslesen und unter „Luftfeutchtigkeit“ speichern
   temperature = dht.readTemperature();//die Temperatur auslesen und unter „Temperatur“ speichern
   delay(tempIntervall);
-  Serial.print("Temp: ");
-  Serial.println(temperature);
   
   // read the sensor value of poti:
   sensorReading = analogRead(POTI_PIN);
-  Serial.print("Poti: ");
-  Serial.print(sensorReading);
-  Serial.print(" - ");
- 
-  // map it to a range from 0 to 100:
   motorSpeed = map(sensorReading, 0, 1023, 0, 1000);
-  result = motorSpeed / 10;
-  if (motorSpeed < 50) {
-        motorSpeed = 0;
-        result = 0;
-      }
-  // reduce steps
+
+  calculateSteps(motorSpeed);
   
-  Serial.print("Steps: ");
-  Serial.println(motorSpeed);
-  //voltage = sensorReading * (5.0 / 1023.0);
-  // print out the value you read:
-  //Serial.print("Volt: ");
-  //Serial.println(voltage);
+  serialOutput();
 
-  Serial.println("------------------------------------");
-
-  // button up
+  // button input read
   buttonUpState = digitalRead(BUTTON_UP);
+  buttonDownState = digitalRead(BUTTON_DOWN);
+  buttonExtraState = digitalRead(BUTTON_EXTRA);
   if (buttonUpState == HIGH) {
     Serial.println("ButtonUp");
-  // set the motor speed:
-    if (motorSpeed > 0) {
-      // calculate better!
-      if (motorSpeed < 50) {
-        motorSpeed = 10;
-      }
-      Serial.print("SetSpeed: ");
-      Serial.println(result);
-      myStepper.setSpeed(result);
-      // step 1/100 of a revolution:
-      //myStepper.step(stepsPerRevolution / motorSpeed);
-      myStepper.step(motorSpeed); // Der Motor macht 2048 Schritte, das entspricht einer Umdrehung..
+    // set the motor speed:
+    if (motorSpeed > 0) {     
+      makeSteps(0);
     }  
   }
 
+  if (buttonDownState == HIGH) {
+    Serial.println("ButtonDown");
+    // set the motor speed:
+    if (motorSpeed > 0) {
+      // calculate better!
+      makeSteps(1);
+    }  
+  }
+  if (buttonExtraState == HIGH) {
+    Serial.println("ButtonExtra");
+  }
+  
+  // use display output
+  showOnDisplay();
+}
+
+void calculateSteps(int potiValue) {
+  //last = lastval_0;
+   // if (last != filter(analogRead(POTI_PIN), lastval_0)) {
+       // map it to a range from 0 to 100:
+       //motorSpeed = map(sensorReading, 0, 1023, 0, 1000);
+    //   Serial.print("Letzter Wert: ");
+      // Serial.println(lastval_0);
+       //delay(2000);
+   //}
+  // todo: do calculation an stepper way in extra function by interrupt
+  result = potiValue;
+  if (potiValue > limitTop) {
+    motorSpeed = 1024;
+    result = 1024;
+  }
+  if (potiValue < 100) {
+    motorSpeed = 100;
+    result = 10;
+  }
+  if (potiValue < 90) {
+    motorSpeed = 90;
+    result = 9;
+  }
+  if (potiValue < 80) {
+    motorSpeed = 80;
+    result = 8;
+  }
+  if (potiValue < limitBottom) {
+    motorSpeed = 10;
+    result = 1;
+  }
+  
+}
+
+void showOnDisplay() {
   // display text
   display.clearDisplay();
   display.setTextSize(1); // Draw 2X-scale text
   display.setTextColor(WHITE);
   display.setCursor(0, 0);;
-  display.print(F("Temp:    "));
+  display.print(F("T: "));
   display.print(temperature);
-  display.print(F(" "));
   display.print(char(247)); // Grad-Zeichen
   display.println(F("C"));
   display.setCursor(0, 10);
-  display.print(F("Feuchte: "));
+  display.print(F("F: "));
   display.print(humedity);
-  display.println(F(" %"));
+  display.println(F("%"));
   display.setCursor(0, 20);
-  display.print(F("Speed:   "));
+  display.print(F("S: "));
   display.print(result);
   display.println(F(" steps"));
   display.display();  
+}
 
-  
-  
+void serialOutput() {
+  // todo: do serial output in extra function
+  Serial.print("Temp: ");
+  Serial.println(temperature);
+  Serial.print("Poti: ");
+  Serial.print(sensorReading);
+  Serial.print(" - ");
+  Serial.print("motorspeed: ");
+  Serial.println(motorSpeed);
+  voltage = sensorReading * (5.0 / 1023.0);
+  // print out the value you read:
+  Serial.print("Volt: ");
+  Serial.println(voltage);
+  Serial.println("------------------------------------");
+ }
+
+void makeSteps(int direction) {
+  if (direction == 1) {
+    result = -1 * result;
+    Serial.print("negativer Wert!");
+  }
+  Serial.print("SetSpeed: ");
+  Serial.println(result);
+  myStepper.setSpeed(5);
+  // step 1/100 of a revolution:
+  //myStepper.step(stepsPerRevolution / motorSpeed);
+  myStepper.step(result); // Der Motor macht 2048 Schritte, das entspricht einer Umdrehung..
 }
 
 void switchPressed() {
