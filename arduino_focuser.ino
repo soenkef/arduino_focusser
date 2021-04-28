@@ -1,24 +1,17 @@
 
 /*
- Stepper Motor Control - speed control
+ Focuser-Code
+ - Stepper
+ - Poti
+ - DHT11
+ - OLED
+ - Arduino Nano
 
- This program drives a unipolar or bipolar stepper motor.
- The motor is attached to digital pins 8 - 11 of the Arduino.
- A potentiometer is connected to analog input 0.
-
- The motor will rotate in a clockwise direction. The higher the potentiometer value,
- the faster the motor speed. Because setSpeed() sets the delay between steps,
- you may notice the motor is less responsive to changes in the sensor value at
- low speeds.
-
- todo:
- - make motor turn clockwise and other direction
- - set two buttons (forward, backward)
- - set one button for display on
- - adapt movement of stepper by poti very sensible
- - temperature
+ TODO:
+ - show temp and humedity only when a difference exists of +/- 0.5/1
 
  */
+ 
 // Display
 #include <SPI.h>
 #include <Wire.h>
@@ -104,14 +97,33 @@ void loop() {
 
   humedity = dht.readHumidity(); //die Luftfeuchtigkeit auslesen und unter „Luftfeutchtigkeit“ speichern
   temperature = dht.readTemperature();//die Temperatur auslesen und unter „Temperatur“ speichern
+  // get only values for output, if a little difference exists to last value
+//  if (humedity != NULL) {
+//    humedityNew = dht.readHumidity();
+//  }
+//  if ((humedityNew + 1) >= humedity) {
+//    humedityNew = humedity;
+//  } else if ((humedityNew - 1) <= humedity) {
+//    humedityNew = humedity;
+//  }
+//  if (temperature != NULL) {
+//    temperatureNew = dht.readTemperature();
+//  }
+//  if ((temperatureNew + 0.5) >= temperature) {
+//    temperatureNew = temperature;
+//  } else if ((temperatureNew - 0.5) <= temperature) {
+//    temperatureNew = temperature;
+//  }
+   
   delay(tempIntervall);
+  
   
   // read the sensor value of poti:
   sensorReading = analogRead(POTI_PIN);
   motorSpeed = map(sensorReading, 0, 1023, 0, 1000);
 
+  // integrate excluded functions
   calculateSteps(motorSpeed);
-  
   serialOutput();
 
   // button input read
@@ -136,8 +148,6 @@ void loop() {
   }
   if (buttonExtraState == HIGH) {
     Serial.println("ButtonExtra");
-    display.clearDisplay();
-    display.display();
   }
   
   // use display output
