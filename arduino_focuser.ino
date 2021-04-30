@@ -49,10 +49,10 @@ int mySensVals[14] = {1, 3, 5, 7, 9, 10, 15, 20, 25, 30, 40, 55, 75, 95};
 
 #define BUTTON_UP 8
 #define BUTTON_DOWN 9
-#define BUTTON_EXTRA 10
+//#define BUTTON_EXTRA 10
 int buttonUpState = 0;
 int buttonDownState = 0;
-int buttonExtraState = 0;
+//int buttonExtraState = 0;
 
 // temperature
 int tempSensorValue = 0;
@@ -80,7 +80,7 @@ void setup() {
   dht.begin(); //DHT11 Sensor starten
   pinMode(BUTTON_UP, INPUT);
   pinMode(BUTTON_DOWN, INPUT);
-  pinMode(BUTTON_EXTRA, INPUT);
+  //pinMode(BUTTON_EXTRA, INPUT);
   //attachInterrupt (digitalPinToInterrupt (BUTTON_UP), switchPressed, HIGH);  // attach interrupt handler
   //attachInterrupt (digitalPinToInterrupt (BUTTON_DOWN), switchPressed, HIGH);  // attach interrupt handler
   //attachInterrupt (digitalPinToInterrupt (BUTTON_EXTRA), switchPressed, CHANGE);  // attach interrupt handler  
@@ -129,7 +129,7 @@ void loop() {
   // button input read
   buttonUpState = digitalRead(BUTTON_UP);
   buttonDownState = digitalRead(BUTTON_DOWN);
-  buttonExtraState = digitalRead(BUTTON_EXTRA);
+  //buttonExtraState = digitalRead(BUTTON_EXTRA);
   if (buttonUpState == HIGH) {
     Serial.println("ButtonUp");
     // set the motor speed:
@@ -146,14 +146,17 @@ void loop() {
       makeSteps(1);
     }  
   }
-  if (buttonExtraState == HIGH) {
-    Serial.println("ButtonExtra");
-  }
+  //if (buttonExtraState == HIGH) {
+  //  Serial.println("ButtonExtra");
+  //}
   
   // use display output
   showOnDisplay();
 }
 
+// hard coded
+// todo: make better algorithm to set lower poti movement with lower steps and make 
+// disproportionately bigger steps while moving
 void calculateSteps(int potiValue) {
   //last = lastval_0;
    // if (last != filter(analogRead(POTI_PIN), lastval_0)) {
