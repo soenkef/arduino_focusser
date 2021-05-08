@@ -9,6 +9,7 @@
 
  TODO:
  - show temp and humedity only when a difference exists of +/- 0.5/1
+ - adjust stepper speed in relation to steps - as smaller as slower!
 
  */
  
@@ -91,6 +92,13 @@ void setup() {
     for(;;); // Don't proceed, loop forever
   }
   display.clearDisplay();
+
+  myStepper.setSpeed(5);
+  // step 1/100 of a revolution:
+  //myStepper.step(stepsPerRevolution / motorSpeed);
+  //myStepper.step(200); // Der Motor macht 2048 Schritte, das entspricht einer Umdrehung..
+  //delay(1000);
+  //myStepper.step(-200);
 }
 
 void loop() {
