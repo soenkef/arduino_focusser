@@ -277,8 +277,19 @@ void makeSteps(int direction) {
   Serial.print("SetSpeed: ");
   Serial.println(result);
   myStepper.setSpeed(5);
-  // step 1/100 of a revolution:
-  //myStepper.step(stepsPerRevolution / motorSpeed);
+
+  // set speed much slower if steps are smaller
+  if (result < 100) {
+    myStepper.setSpeed(4);
+  } else if (result < 80) {
+    myStepper.setSpeed(4);
+  } else if (result < 60) {
+    myStepper.setSpeed(3);
+  } else if (result < 50) {
+    myStepper.setSpeed(2);
+  } else if (result < 20) {
+    myStepper.setSpeed(1);
+  }
   myStepper.step(result); // Der Motor macht 2048 Schritte, das entspricht einer Umdrehung..
 }
 
